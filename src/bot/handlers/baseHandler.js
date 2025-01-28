@@ -21,7 +21,9 @@ class BaseHandler {
    * @param {Object} ctx - Telegram context
    */
   async handle(_ctx) {
-    throw new Error('Handler must implement handle method');
+    const type = this.constructor.name.includes('Command') ? 'Command' : 
+                 this.constructor.name.includes('Action') ? 'Action' : 'Base';
+    throw new Error(`${type} handler must implement handle method`);
   }
 
   /**

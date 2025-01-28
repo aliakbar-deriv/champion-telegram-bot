@@ -5,8 +5,14 @@ const Logger = require('../../../utils/logger');
 // Mock dependencies
 jest.mock('../../../utils/logger');
 
-// Mock environment variable
-process.env.WEBAPP_URL = 'https://test-webapp.com';
+const config = require('../../../config');
+
+// Mock dependencies
+jest.mock('../../../config', () => ({
+  bot: {
+    webAppHostUrl: 'https://test-webapp.com'
+  }
+}));
 
 describe('AboutAction', () => {
   let aboutAction;
@@ -46,7 +52,7 @@ describe('AboutAction', () => {
           inline_keyboard: [[
             {
               text: 'Start trading',
-              web_app: { url: process.env.WEBAPP_URL }
+              web_app: { url: config.bot.webAppHostUrl }
             }
           ]]
         }

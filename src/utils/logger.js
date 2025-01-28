@@ -15,19 +15,45 @@ const LogLevel = {
  * Centralized logging utility that provides environment-aware logging
  */
 class Logger {
-  static logLevel = process.env.LOG_LEVEL ? 
-    LogLevel[process.env.LOG_LEVEL.toUpperCase()] : 
-    (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG);
+  /**
+   * Initialize the logger with default log level
+   */
+  static initialize() {
+    Logger.logLevel = Logger.getCurrentLogLevel();
+  }
+
+  /**
+   * Get the current log level based on environment
+   * @private
+   */
+  static getCurrentLogLevel() {
+    if (process.env.LOG_LEVEL) {
+      const level = LogLevel[process.env.LOG_LEVEL.toUpperCase()];
+      if (level !== undefined) {
+        return level;
+      }
+    }
+    
+    switch (process.env.NODE_ENV) {
+      case 'production':
+        return LogLevel.WARN;
+      case 'staging':
+        return LogLevel.INFO;
+      case 'development':
+      default:
+        return LogLevel.DEBUG;
+    }
+  }
 
   /**
    * Format a log message with timestamp and environment
    * @private
    */
   static formatMessage(level, args) {
-    const timestamp = new Date().toISOString();
-    const prefix = `[${timestamp}] [${level}] [${process.env.NODE_ENV || 'development'}]`;
+    const prefix = `[${level}]`;
+    const env = process.env.NODE_ENV || 'development';
     
-    return args.map(arg => {
+    return [prefix, `[${env}]`, ...args.map(arg => {
       if (arg instanceof Error) {
         return {
           message: arg.message,
@@ -35,11 +61,8 @@ class Logger {
           ...arg
         };
       }
-      if (typeof arg === 'object') {
-        return JSON.stringify(arg, null, 2);
-      }
       return arg;
-    }).join(' ');
+    })];
   }
 
   /**
@@ -47,8 +70,12 @@ class Logger {
    * Only visible in development environment and when log level is DEBUG
    */
   static debug(...args) {
+    const env = process.env.NODE_ENV || 'development';
+    if (env !== 'development') {
+      return;
+    }
     if (Logger.logLevel <= LogLevel.DEBUG) {
-      console.debug(Logger.formatMessage('DEBUG', args));
+      console.debug(...Logger.formatMessage('DEBUG', args));
     }
   }
 
@@ -57,8 +84,12 @@ class Logger {
    * Not visible in production environment
    */
   static log(...args) {
+    const env = process.env.NODE_ENV || 'development';
+    if (env === 'production') {
+      return;
+    }
     if (Logger.logLevel <= LogLevel.INFO) {
-      console.log(Logger.formatMessage('INFO', args));
+      console.log(...Logger.formatMessage('INFO', args));
     }
   }
 
@@ -68,7 +99,7 @@ class Logger {
    */
   static warn(...args) {
     if (Logger.logLevel <= LogLevel.WARN) {
-      console.warn(Logger.formatMessage('WARN', args));
+      console.warn(...Logger.formatMessage('WARN', args));
     }
   }
 
@@ -78,16 +109,16 @@ class Logger {
    */
   static error(...args) {
     if (Logger.logLevel <= LogLevel.ERROR) {
-      console.error(Logger.formatMessage('ERROR', args));
+      console.error(...Logger.formatMessage('ERROR', args));
     }
   }
 
   /**
-   * Get current log level
+   * Get current log level name
    * @returns {string} Current log level name
    */
   static getLogLevel() {
-    return Object.keys(LogLevel).find(key => LogLevel[key] === Logger.logLevel);
+    return Object.keys(LogLevel).find(key => LogLevel[key] === Logger.logLevel) || 'DEBUG';
   }
 
   /**
@@ -103,5 +134,8 @@ class Logger {
     }
   }
 }
+
+// Initialize logger with default log level
+Logger.initialize();
 
 module.exports = Logger;

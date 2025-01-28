@@ -128,27 +128,30 @@ describe('BaseCommand', () => {
     it('should log error and send error message', async () => {
       const error = new Error('Test error');
       
-      await baseCommand.handleError(mockCtx, error);
+      await baseCommand.handleError(mockCtx, error, 'command');
 
       // Verify error was logged
       expect(Logger.error).toHaveBeenCalledWith(
-        'Command error: Test error',
-        expect.objectContaining({
+        'command error: Test error',
+        {
           command: '/testcommand',
-          user: expect.objectContaining({
+          user: {
             id: 123,
-            username: 'testuser'
-          }),
-          error: expect.objectContaining({
+            username: 'testuser',
+            firstName: 'Test',
+            lastName: 'User',
+            languageCode: 'en'
+          },
+          error: {
             message: error.message,
             stack: error.stack
-          })
-        })
+          }
+        }
       );
 
       // Verify error message was sent to user
       expect(mockCtx.reply).toHaveBeenCalledWith(
-        'Sorry, there was an error processing your command. Please try again.'
+        'Sorry, there was an error processing your request. Please try again.'
       );
     });
   });

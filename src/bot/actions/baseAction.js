@@ -1,4 +1,5 @@
 const BaseHandler = require('../handlers/baseHandler');
+const Logger = require('../../utils/logger');
 
 class BaseAction extends BaseHandler {
   /**
@@ -25,7 +26,7 @@ class BaseAction extends BaseHandler {
       await ctx.answerCbQuery();
     } catch (error) {
       Logger.error('Error answering callback query:', {
-        error: error.message,
+        error,
         stack: error.stack,
         user: this.getUserInfo(ctx),
         callbackQuery: ctx.callbackQuery?.data

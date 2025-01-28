@@ -7,7 +7,8 @@ const Logger = require('../../../utils/logger');
 jest.mock('../../../utils/logger');
 jest.mock('../../../config', () => ({
   bot: {
-    webAppUrl: 'https://test-webapp.com'
+    webAppUrl: 'https://test-webapp.com',
+    webAppHostUrl: 'https://test-webapp.com'
   },
   urls: {
     learnMore: 'https://test-learn-more.com'
@@ -41,16 +42,21 @@ describe('StartCommand', () => {
 
     // Verify photo message was sent with correct options
     expect(mockCtx.replyWithPhoto).toHaveBeenCalledWith(
-      'https://i.imgur.com/XgXiwOf.jpg',
+      'https://imgur.com/pezy5zb',
       {
-        caption: MessageTemplates.WELCOME,
+        caption: MessageTemplates.WELCOME.replace('%WEB_APP_URL%', config.bot.webAppUrl),
         reply_markup: {
           inline_keyboard: [
-            [{ text: 'Trade Now! 📈', web_app: { url: config.bot.webAppUrl } }],
+            [{ text: 'Trade Now! 📈', web_app: { url: config.bot.webAppHostUrl } }],
             [{ text: 'About', callback_data: 'about' }, { text: 'Explore More 🌟', url: config.urls.learnMore }]
           ]
         },
-        parse_mode: 'HTML'
+        parse_mode: 'HTML',
+        link_preview_options: {
+          is_disabled: false,
+          url: config.urls.learnMore,
+          prefer_small_media: true
+        }
       }
     );
 
@@ -78,6 +84,6 @@ describe('StartCommand', () => {
     await startCommand.handle(mockCtx);
 
     // Verify error was handled
-    expect(startCommand.handleError).toHaveBeenCalledWith(mockCtx, error);
+    expect(startCommand.handleError).toHaveBeenCalledWith(mockCtx, error, 'command');
   });
 });

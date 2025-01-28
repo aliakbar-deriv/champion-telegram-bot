@@ -140,22 +140,25 @@ describe('BaseAction', () => {
     it('should log error and send error message', async () => {
       const error = new Error('Test error');
       
-      await baseAction.handleError(mockCtx, error);
+      await baseAction.handleError(mockCtx, error, 'action');
 
       // Verify error was logged
       expect(Logger.error).toHaveBeenCalledWith(
-        'Action error: Test error',
-        expect.objectContaining({
+        'action error: Test error',
+        {
           action: 'test_action',
-          user: expect.objectContaining({
+          user: {
             id: 123,
-            username: 'testuser'
-          }),
-          error: expect.objectContaining({
+            username: 'testuser',
+            firstName: 'Test',
+            lastName: 'User',
+            languageCode: 'en'
+          },
+          error: {
             message: error.message,
             stack: error.stack
-          })
-        })
+          }
+        }
       );
 
       // Verify error message was sent to user
@@ -181,15 +184,18 @@ describe('BaseAction', () => {
       // Should log the error
       expect(Logger.error).toHaveBeenCalledWith(
         'Error answering callback query:',
-        expect.objectContaining({
-          error: error.message,
+        {
+          error,
           stack: error.stack,
-          user: expect.objectContaining({
+          user: {
             id: 123,
-            username: 'testuser'
-          }),
+            username: 'testuser',
+            firstName: 'Test',
+            lastName: 'User',
+            languageCode: 'en'
+          },
           callbackQuery: 'test_action'
-        })
+        }
       );
     });
 
